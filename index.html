@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Happy Birthday ありさへ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Noto+Serif+JP:wght@200;300;400&family=Cinzel:wght@400;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --black: #050508;
+      --silver: #c8c8d4;
+      --silver-dim: #7a7a8e;
+      --purple-pale: #b8a8d4;
+      --purple-soft: #9080b8;
+      --gold-dim: #c8a860;
+      --glass: rgba(200, 200, 220, 0.07);
+      --glass-border: rgba(200, 200, 220, 0.15);
+      --glow-purple: rgba(160, 120, 220, 0.35);
+      --glow-silver: rgba(200, 200, 230, 0.2);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+      background: var(--black);
+      color: var(--silver);
+      font-family: 'Noto Serif JP', serif;
+      overflow-x: hidden;
+    }
+
+    /* ─── Intro overlay ─── */
+    #intro {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: var(--black);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+      cursor: pointer;
+      transition: opacity 1.2s ease, transform 1.2s ease;
+    }
+    #intro.fade-out {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(1.04);
+    }
+    .intro-ring {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      animation: ringPulse 2.4s ease-in-out infinite;
+    }
+    .intro-ring::before {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      border: 1px solid rgba(160,120,220,0.2);
+      animation: ringPulse 2.4s ease-in-out infinite reverse;
+    }
+    @keyframes ringPulse {
+      0%, 100% { box-shadow: 0 0 20px var(--glow-purple); }
+      50% { box-shadow: 0 0 50px var(--glow-purple), 0 0 80px rgba(160,120,220,0.1); }
+    }
+    .star-icon {
+      font-size: 2.8rem;
+      filter: drop-shadow(0 0 12px rgba(200,200,230,0.6));
+    }
+    .intro-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.35em;
+      color: var(--silver-dim);
+      text-transform: uppercase;
+    }
+    .intro-sub {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 0.7rem;
+      color: rgba(200,200,220,0.4);
+      letter-spacing: 0.2em;
+    }
+
+    /* ─── Canvas for particles ─── */
+    #starCanvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ─── Main card ─── */
+    #card {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 0 80px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 1.6s ease 0.4s, transform 1.6s ease 0.4s;
+    }
+    #card.visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* ─── Hero ─── */
+    .hero {
+      width: 100%;
+      max-width: 480px;
+      position: relative;
+      padding-top: 60px;
+    }
+
+    /* light beam behind photo */
+    .stage-light {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 2px;
+      height: 100%;
+      background: linear-gradient(180deg,
+        rgba(180,140,255,0.5) 0%,
+        rgba(180,140,255,0.12) 50%,
+        transparent 100%);
+      filter: blur(18px);
+      animation: beamFlicker 4s ease-in-out infinite;
+      z-index: 0;
+    }
+    @keyframes beamFlicker {
+      0%,100% { opacity: 0.6; }
+      40% { opacity: 1; }
+      70% { opacity: 0.4; }
+    }
+
+    /* wide soft glow beneath image */
+    .hero-glow {
+      position: absolute;
+      bottom: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 280px;
+      height: 80px;
+      background: radial-gradient(ellipse, rgba(140,100,220,0.25), transparent 70%);
+      filter: blur(20px);
+      z-index: 0;
+    }
+
+    .photo-frame {
+      position: relative;
+      z-index: 1;
+      width: 200px;
+      height: 200px;
+      margin: 0 auto;
+    }
+    .photo-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+      border-radius: 50%;
+      display: block;
+      filter: brightness(0.95) contrast(1.05) saturate(0.9);
+    }
+    /* silver ring */
+    .photo-frame::before {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 50%;
+      background: conic-gradient(
+        from 0deg,
+        rgba(200,200,230,0.0),
+        rgba(200,200,230,0.7),
+        rgba(160,120,220,0.6),
+        rgba(200,200,230,0.0),
+        rgba(200,200,230,0.5)
+      );
+      animation: ringRotate 8s linear infinite;
+      z-index: -1;
+    }
+    /* inner shadow ring */
+    .photo-frame::after {
+      content: '';
+      position: absolute;
+      inset: 2px;
+      border-radius: 50%;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.6);
+      z-index: 2;
+      pointer-events: none;
+    }
+    @keyframes ringRotate {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ─── Title block ─── */
+    .title-block {
+      margin-top: 36px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+    .hb-en {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.4rem, 6vw, 2rem);
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      color: var(--silver);
+      text-shadow:
+        0 0 30px rgba(200,200,240,0.4),
+        0 0 60px rgba(160,120,220,0.2);
+      animation: titleGlow 3s ease-in-out infinite;
+    }
+    @keyframes titleGlow {
+      0%,100% { text-shadow: 0 0 20px rgba(200,200,240,0.3), 0 0 50px rgba(160,120,220,0.15); }
+      50% { text-shadow: 0 0 40px rgba(200,200,240,0.6), 0 0 80px rgba(160,120,220,0.3); }
+    }
+    .hb-rule {
+      width: 60px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--silver-dim), transparent);
+      margin: 12px auto;
+    }
+    .hb-name {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 1.05rem;
+      font-weight: 200;
+      letter-spacing: 0.3em;
+      color: var(--purple-pale);
+    }
+
+    /* ─── Audio player ─── */
+    .audio-wrap {
+      margin-top: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      z-index: 1;
+      position: relative;
+    }
+    .audio-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.4em;
+      color: var(--silver-dim);
+      text-transform: uppercase;
+    }
+    .play-btn {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 1px solid var(--glass-border);
+      background: var(--glass);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      backdrop-filter: blur(6px);
+    }
+    .play-btn:hover {
+      border-color: rgba(160,120,220,0.5);
+      box-shadow: 0 0 20px var(--glow-purple);
+    }
+    .play-btn.playing {
+      border-color: rgba(160,120,220,0.7);
+      box-shadow: 0 0 30px var(--glow-purple), 0 0 60px rgba(160,120,220,0.1);
+      animation: playerPulse 2s ease-in-out infinite;
+    }
+    @keyframes playerPulse {
+      0%,100% { box-shadow: 0 0 20px var(--glow-purple); }
+      50% { box-shadow: 0 0 40px var(--glow-purple), 0 0 80px rgba(160,120,220,0.2); }
+    }
+    .play-icon { font-size: 1.3rem; margin-left: 3px; }
+    .pause-icon { font-size: 1.3rem; display: none; }
+    .play-btn.playing .play-icon { display: none; }
+    .play-btn.playing .pause-icon { display: block; }
+
+    /* waveform bars */
+    .wave-bars {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      height: 20px;
+    }
+    .wave-bars span {
+      display: block;
+      width: 2px;
+      background: var(--purple-soft);
+      border-radius: 2px;
+      opacity: 0.3;
+      height: 4px;
+      transition: height 0.1s;
+    }
+    .wave-bars.active span { opacity: 0.7; }
+    .wave-bars.active span:nth-child(1) { animation: bar 0.9s ease-in-out infinite 0.0s; }
+    .wave-bars.active span:nth-child(2) { animation: bar 0.9s ease-in-out infinite 0.1s; }
+    .wave-bars.active span:nth-child(3) { animation: bar 0.9s ease-in-out infinite 0.2s; }
+    .wave-bars.active span:nth-child(4) { animation: bar 0.9s ease-in-out infinite 0.15s; }
+    .wave-bars.active span:nth-child(5) { animation: bar 0.9s ease-in-out infinite 0.05s; }
+    .wave-bars.active span:nth-child(6) { animation: bar 0.9s ease-in-out infinite 0.25s; }
+    .wave-bars.active span:nth-child(7) { animation: bar 0.9s ease-in-out infinite 0.08s; }
+    @keyframes bar {
+      0%,100% { height: 3px; }
+      50% { height: 16px; }
+    }
+
+    /* ─── Message card ─── */
+    .message-card {
+      margin: 44px 20px 0;
+      max-width: 420px;
+      width: calc(100% - 40px);
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 2px;
+      padding: 40px 28px;
+      position: relative;
+      backdrop-filter: blur(8px);
+      overflow: hidden;
+    }
+    /* corner accents */
+    .message-card::before,
+    .message-card::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-color: var(--silver-dim);
+      border-style: solid;
+      opacity: 0.4;
+    }
+    .message-card::before {
+      top: 12px; left: 12px;
+      border-width: 1px 0 0 1px;
+    }
+    .message-card::after {
+      bottom: 12px; right: 12px;
+      border-width: 0 1px 1px 0;
+    }
+
+    .msg-section {
+      margin-bottom: 28px;
+    }
+    .msg-section:last-child { margin-bottom: 0; }
+
+    .msg-p {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 0.82rem;
+      font-weight: 300;
+      line-height: 2.1;
+      color: rgba(200,200,220,0.85);
+      letter-spacing: 0.04em;
+    }
+    .msg-p.intro {
+      font-size: 0.78rem;
+      color: var(--purple-pale);
+      letter-spacing: 0.06em;
+    }
+    .msg-divider {
+      width: 30px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--silver-dim), transparent);
+      margin: 24px auto;
+    }
+    .msg-from {
+      text-align: right;
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: 0.85rem;
+      color: var(--silver-dim);
+      letter-spacing: 0.1em;
+      margin-top: 32px;
+    }
+
+    /* ─── Closing flourish ─── */
+    .closing {
+      margin-top: 60px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+    .closing-star {
+      font-size: 1.4rem;
+      display: block;
+      animation: starFloat 3s ease-in-out infinite;
+      filter: drop-shadow(0 0 8px rgba(200,200,240,0.5));
+    }
+    @keyframes starFloat {
+      0%,100% { transform: translateY(0); opacity: 0.7; }
+      50% { transform: translateY(-6px); opacity: 1; }
+    }
+    .closing-text {
+      margin-top: 16px;
+      font-family: 'Cinzel', serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.5em;
+      color: rgba(200,200,220,0.25);
+      text-transform: uppercase;
+    }
+
+    /* ─── Firework burst ─── */
+    #burst {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      pointer-events: none;
+    }
+    .burst-particle {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      opacity: 0;
+    }
+
+    /* ─── Scroll reveal ─── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 0.9s ease, transform 0.9s ease;
+    }
+    .reveal.shown {
+      opacity: 1;
+      transform: none;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Intro screen -->
+<div id="intro">
+  <div class="intro-ring">
+    <span class="star-icon">✦</span>
+  </div>
+  <div>
+    <p class="intro-label">A Birthday Card</p>
+    <p class="intro-sub" style="margin-top:6px; text-align:center;">タップして開く</p>
+  </div>
+</div>
+
+<!-- Firework canvas -->
+<canvas id="burst"></canvas>
+
+<!-- Star / particle background -->
+<canvas id="starCanvas"></canvas>
+
+<!-- Main card -->
+<div id="card">
+  <div class="hero">
+    <div class="stage-light"></div>
+
+    <div class="photo-frame">
+      <img src="arisa.jpeg" alt="ありさ" />
+    </div>
+
+    <div class="hero-glow"></div>
+  </div>
+
+  <div class="title-block reveal">
+    <p class="hb-en">Happy Birthday</p>
+    <div class="hb-rule"></div>
+    <p class="hb-name">ありさへ</p>
+  </div>
+
+  <!-- Audio -->
+  <div class="audio-wrap reveal">
+    <span class="audio-label">♩ Glass Stars</span>
+    <button class="play-btn" id="playBtn" aria-label="再生">
+      <span class="play-icon">▶</span>
+      <span class="pause-icon">▮▮</span>
+    </button>
+    <div class="wave-bars" id="waveBars">
+      <span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+
+  <!-- Message -->
+  <div class="message-card reveal">
+
+    <div class="msg-section">
+      <p class="msg-p intro">
+        ありさはいつも元気で、<br>
+        強くて、<br>
+        たくましくて、<br>
+        いつも笑っていて、<br>
+        たくさん元気をもらっていました。
+      </p>
+    </div>
+
+    <div class="msg-divider"></div>
+
+    <div class="msg-section">
+      <p class="msg-p">
+        でもね、<br>
+        ありさが弱いところを人に見せずに、<br>
+        頑張っていることも知っています。
+      </p>
+    </div>
+
+    <div class="msg-divider"></div>
+
+    <div class="msg-section">
+      <p class="msg-p">
+        その強さが、<br>
+        私はずっとかっこいいなって思っていました。
+      </p>
+    </div>
+
+    <div class="msg-divider"></div>
+
+    <div class="msg-section">
+      <p class="msg-p">
+        ありさに助けられて、<br>
+        ここまで歩いてこられたよ。
+      </p>
+      <p class="msg-p" style="margin-top:1.4rem;">
+        いつも本当にありがとう。<br>
+        これからもよろしくね。
+      </p>
+    </div>
+
+    <p class="msg-from">— まこより</p>
+  </div>
+
+  <!-- Closing -->
+  <div class="closing reveal">
+    <span class="closing-star">✦</span>
+    <p class="closing-text">Always shining</p>
+  </div>
+</div>
+
+<!-- Hidden audio -->
+<audio id="bgAudio" loop preload="none">
+  <source src="birthday.mp3" type="audio/mpeg" />
+</audio>
+
+<script>
+// ─── Stars & particles background ───
+const canvas = document.getElementById('starCanvas');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+const stars = Array.from({ length: 120 }, () => ({
+  x: Math.random(),
+  y: Math.random(),
+  r: Math.random() * 1.2 + 0.2,
+  a: Math.random(),
+  speed: Math.random() * 0.003 + 0.001,
+  phase: Math.random() * Math.PI * 2,
+  drift: (Math.random() - 0.5) * 0.00015,
+}));
+
+// Occasional shooting star
+const shoots = [];
+function spawnShoot() {
+  shoots.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height * 0.5,
+    len: Math.random() * 80 + 40,
+    speed: Math.random() * 6 + 4,
+    alpha: 1,
+    angle: Math.PI / 6,
+  });
+  setTimeout(spawnShoot, Math.random() * 5000 + 3000);
+}
+setTimeout(spawnShoot, 2000);
+
+function drawStars(t) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  for (const s of stars) {
+    const alpha = s.a * (0.4 + 0.6 * Math.sin(t * s.speed + s.phase));
+    ctx.beginPath();
+    ctx.arc(s.x * canvas.width, s.y * canvas.height, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(210,200,240,${alpha})`;
+    ctx.fill();
+    s.x += s.drift;
+    if (s.x < -0.01) s.x = 1.01;
+    if (s.x > 1.01) s.x = -0.01;
+  }
+
+  // shooting stars
+  for (let i = shoots.length - 1; i >= 0; i--) {
+    const s = shoots[i];
+    const dx = Math.cos(s.angle) * s.len;
+    const dy = Math.sin(s.angle) * s.len;
+    const grad = ctx.createLinearGradient(s.x, s.y, s.x - dx, s.y - dy);
+    grad.addColorStop(0, `rgba(220,210,255,${s.alpha})`);
+    grad.addColorStop(1, 'transparent');
+    ctx.beginPath();
+    ctx.moveTo(s.x, s.y);
+    ctx.lineTo(s.x - dx, s.y - dy);
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    s.x += Math.cos(s.angle) * s.speed;
+    s.y += Math.sin(s.angle) * s.speed;
+    s.alpha -= 0.02;
+    if (s.alpha <= 0) shoots.splice(i, 1);
+  }
+}
+
+let animT = 0;
+function loop() {
+  animT += 0.5;
+  drawStars(animT);
+  requestAnimationFrame(loop);
+}
+loop();
+
+// ─── Firework burst ───
+const burstCanvas = document.getElementById('burst');
+const bCtx = burstCanvas.getContext('2d');
+function resizeBurst() {
+  burstCanvas.width = window.innerWidth;
+  burstCanvas.height = window.innerHeight;
+}
+resizeBurst();
+window.addEventListener('resize', resizeBurst);
+
+const bParticles = [];
+const COLORS = ['rgba(200,180,255,', 'rgba(180,160,240,', 'rgba(220,200,255,', 'rgba(180,200,230,'];
+
+function firework(cx, cy, n = 28) {
+  for (let i = 0; i < n; i++) {
+    const angle = (Math.PI * 2 / n) * i + (Math.random() - 0.5) * 0.4;
+    const speed = Math.random() * 4 + 1.5;
+    bParticles.push({
+      x: cx, y: cy,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      alpha: 1,
+      r: Math.random() * 2 + 1,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      decay: Math.random() * 0.015 + 0.012,
+    });
+  }
+}
+
+function drawBurst() {
+  bCtx.clearRect(0, 0, burstCanvas.width, burstCanvas.height);
+  for (let i = bParticles.length - 1; i >= 0; i--) {
+    const p = bParticles[i];
+    bCtx.beginPath();
+    bCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    bCtx.fillStyle = p.color + p.alpha + ')';
+    bCtx.fill();
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.08;
+    p.alpha -= p.decay;
+    if (p.alpha <= 0) bParticles.splice(i, 1);
+  }
+  requestAnimationFrame(drawBurst);
+}
+drawBurst();
+
+// ─── Intro → open ───
+const intro = document.getElementById('intro');
+const card = document.getElementById('card');
+const audio = document.getElementById('bgAudio');
+const playBtn = document.getElementById('playBtn');
+const waveBars = document.getElementById('waveBars');
+
+function openCard() {
+  intro.classList.add('fade-out');
+
+  // burst fireworks
+  const cx = window.innerWidth / 2;
+  const cy = window.innerHeight / 3;
+  firework(cx, cy, 32);
+  setTimeout(() => firework(cx - 60, cy + 40, 20), 300);
+  setTimeout(() => firework(cx + 60, cy + 20, 20), 500);
+  setTimeout(() => firework(cx, cy - 30, 24), 700);
+
+  // show card
+  setTimeout(() => {
+    card.classList.add('visible');
+    intro.style.display = 'none';
+  }, 1300);
+
+  // auto-play music (may be blocked by browser)
+  audio.play().catch(() => {});
+  playBtn.classList.add('playing');
+  waveBars.classList.add('active');
+}
+
+intro.addEventListener('click', openCard);
+intro.addEventListener('touchend', e => { e.preventDefault(); openCard(); });
+
+// ─── Audio toggle ───
+playBtn.addEventListener('click', () => {
+  if (audio.paused) {
+    audio.play();
+    playBtn.classList.add('playing');
+    waveBars.classList.add('active');
+  } else {
+    audio.pause();
+    playBtn.classList.remove('playing');
+    waveBars.classList.remove('active');
+  }
+});
+
+// ─── Scroll reveal ───
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('shown'), i * 120);
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.12 });
+reveals.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
